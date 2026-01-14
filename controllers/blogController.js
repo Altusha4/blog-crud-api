@@ -1,0 +1,18 @@
+const Blog = require("../models/Blog");
+
+const createBlog = async (req, res) => {
+    try {
+        const { title, body, author } = req.body;
+
+        if (!title || !body) {
+            return res.status(400).json({ error: "Title and body are required" });
+        }
+
+        const blog = await Blog.create({ title, body, author });
+        res.status(201).json(blog);
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+module.exports = { createBlog };
