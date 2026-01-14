@@ -15,4 +15,14 @@ const createBlog = async (req, res) => {
     }
 };
 
-module.exports = { createBlog };
+
+const getAllBlogs = async (req, res) => {
+    try {
+        const blogs = await Blog.find().sort({ createdAt: -1 });
+        res.json(blogs);
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+module.exports = { createBlog, getAllBlogs };
