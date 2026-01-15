@@ -15,7 +15,6 @@ const createBlog = async (req, res) => {
     }
 };
 
-
 const getAllBlogs = async (req, res) => {
     try {
         const blogs = await Blog.find().sort({ createdAt: -1 });
@@ -75,6 +74,5 @@ const deleteBlog = async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 };
-
 
 module.exports = { createBlog, getAllBlogs, getBlogById, updateBlog, deleteBlog };
