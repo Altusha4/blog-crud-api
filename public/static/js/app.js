@@ -1,79 +1,80 @@
-document.getElementById("blogForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const title = document.getElementById("title").value;
-    const body = document.getElementById("body").value;
-    const author = document.getElementById("author").value || "Anonymous";
-
-    const blog = { title, body, author };
-
-    fetch("http://localhost:3000/blogs", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(blog)
-    })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Blog created:", data);
-            fetchBlogs();
-        })
-        .catch(error => console.log("Error creating blog:", error));
-});
+const blogForm = document.getElementById("blogForm");
+const blogIdInput = document.getElementById("blogId");
+const submitBtn = document.getElementById("submitBtn");
+const cancelEditBtn = document.getElementById("cancelEdit");
+const formTitle = document.getElementById("formTitle");
+const blogList = document.getElementById("blogList");
+const refreshBtn = document.getElementById("refreshBtn");
 
 function fetchBlogs() {
-    fetch("http://localhost:3000/blogs")
-        .then(response => response.json())
+    fetch("/blogs")
+        .then(res => res.json())
         .then(data => {
-            const blogList = document.getElementById("blogList");
             blogList.innerHTML = "";
             data.forEach(blog => {
                 const li = document.createElement("li");
-                li.textContent = `${blog.title} by ${blog.author}`;
-                const deleteBtn = document.createElement("button");
-                deleteBtn.textContent = "Delete";
-                deleteBtn.onclick = function () {
-                    showDeleteModal(blog._id);
-                };
-                li.appendChild(deleteBtn);
+                li.className = "blog-card";
+                li.innerHTML = `
+                    <h3>${blog.title}</h3>
+                    <p>${blog.body}</p>
+                    <span class="author">By: ${blog.author}</span>
+                    <div class="card-actions">
+                        <button class="edit-btn">Edit</button>
+                        <button class="delete-btn">Delete</button>
+                    </div>
+                `;
+                li.querySelector(".edit-btn").onclick = () => fillForm(blog);
+                li.querySelector(".delete-btn").onclick = () => deletePost(blog._id);
                 blogList.appendChild(li);
             });
-        })
-        .catch(error => console.log("Error fetching blogs:", error));
+        });
 }
 
-function showDeleteModal(id) {
-    const modal = document.getElementById("deleteModal");
-    const confirmDelete = document.getElementById("confirmDelete");
-    const cancelDelete = document.getElementById("cancelDelete");
-
-    modal.style.display = "block";
-
-    confirmDelete.onclick = function () {
-        deleteBlog(id);
-        modal.style.display = "none";
+blogForm.onsubmit = (e) => {
+    e.preventDefault();
+    const id = blogIdInput.value;
+    const data = {
+        title: document.getElementById("title").value,
+        body: document.getElementById("body").value,
+        author: document.getElementById("author").value || "Anonymous"
     };
 
-    cancelDelete.onclick = function () {
-        modal.style.display = "none";
-    };
+    fetch(id ? `/blogs/${id}` : "/blogs", {
+        method: id ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    }).then(() => {
+        resetForm();
+        fetchBlogs();
+    });
+};
 
-    document.getElementById("closeModal").onclick = function () {
-        modal.style.display = "none";
-    };
+function deletePost(id) {
+    if (confirm("Delete this post?")) {
+        fetch(`/blogs/${id}`, { method: "DELETE" }).then(() => fetchBlogs());
+    }
 }
 
-function deleteBlog(id) {
-    fetch(`http://localhost:3000/blogs/${id}`, {
-        method: "DELETE"
-    })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Blog deleted:", data);
-            fetchBlogs();
-        })
-        .catch(error => console.log("Error deleting blog:", error));
+function fillForm(blog) {
+    blogIdInput.value = blog._id;
+    document.getElementById("title").value = blog.title;
+    document.getElementById("body").value = blog.body;
+    document.getElementById("author").value = blog.author;
+    formTitle.innerText = "Edit Post";
+    submitBtn.innerText = "Update Post";
+    cancelEditBtn.style.display = "block";
+    window.scrollTo(0,0);
 }
+
+function resetForm() {
+    blogForm.reset();
+    blogIdInput.value = "";
+    formTitle.innerText = "Create a New Blog Post";
+    submitBtn.innerText = "Create Post";
+    cancelEditBtn.style.display = "none";
+}
+
+cancelEditBtn.onclick = resetForm;
+refreshBtn.onclick = fetchBlogs;
 
 fetchBlogs();
