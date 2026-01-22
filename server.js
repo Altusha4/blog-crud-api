@@ -1,22 +1,22 @@
-require('dotenv').config()
-const mongoose = require('mongoose')
-const express = require('express')
+require('dotenv').config();
+const mongoose = require('mongoose');
+const express = require('express');
 const blogRoutes = require("./routes/blogRoutes");
 
-const app = express()
+const app = express();
 
-app.use(express.static("public"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public")); // Раздача фронтенда
+
+app.use("/blogs", blogRoutes);
+
 const DB_URI = process.env.MONGO_URI;
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+const PORT = 3000;
 
-app.use("/blogs", blogRoutes)
-app.get('/', (req, res) => {
-    res.send("works!")
-})
 mongoose.connect(DB_URI)
     .then(() => {
-        console.log("Connected")
-        app.listen(3000, () => console.log("http://localhost:3000"))
+        console.log("Connected to MongoDB");
+        app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
     })
-    .catch(err => console.error(err))
+    .catch(err => console.error("Database connection error:", err));
